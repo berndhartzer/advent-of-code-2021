@@ -1,7 +1,9 @@
 package aoc
 
 import (
+	"fmt"
 	"testing"
+	"time"
 )
 
 func sonarSweepPartOne(measurements []int) int {
@@ -55,9 +57,11 @@ func TestDayOne(t *testing.T) {
 		for name, cfg := range tests {
 			cfg := cfg
 			t.Run(name, func(t *testing.T) {
+				start := time.Now()
 				output := fn(cfg.input)
+				finish := time.Since(start)
 				if cfg.logResult {
-					t.Log(output)
+					t.Log(fmt.Sprintf("\nsolution:\t%v\nelapsed time:\t%s", output, finish))
 					return
 				}
 
