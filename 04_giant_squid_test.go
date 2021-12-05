@@ -9,23 +9,51 @@ import (
 )
 
 type bingoGame struct {
-	boards []bingoBoard
+	boards        []bingoBoard
+	winningBoards map[int]bool
 }
 
 func (g *bingoGame) addBoard(board bingoBoard) {
 	g.boards = append(g.boards, board)
 }
 
-func (g *bingoGame) callNumber(num string) (bool, bingoBoard) {
-	for _, board := range g.boards {
+func (g *bingoGame) callNumber(num string, returnImmediate bool) (bool, bingoBoard) {
+	atLeastOneWinner := false
+	latestWinner := bingoBoard{}
+
+	for boardID, board := range g.boards {
 		winner := board.markNumber(num)
 		if winner {
-			return true, board
-			break
+			if returnImmediate {
+				return true, board
+				break
+			}
+
+			atLeastOneWinner = true
+			_, ok := g.winningBoards[boardID]
+			if !ok {
+				// This board hasn't won before
+				latestWinner = board
+			}
+			g.winningBoards[boardID] = true
 		}
 	}
 
-	return false, bingoBoard{}
+	return atLeastOneWinner, latestWinner
+}
+
+func (g *bingoGame) getRemainingBoards() []int {
+	remaining := []int{}
+
+	for boardID := range g.boards {
+		_, ok := g.winningBoards[boardID]
+		if ok {
+			continue
+		}
+		remaining = append(remaining, boardID)
+	}
+
+	return remaining
 }
 
 type bingoBoard struct {
@@ -153,7 +181,7 @@ func giantSquidPartOne(bingoNums []string) int {
 	winningCall := ""
 	var winningBoard bingoBoard
 	for _, call := range callNumbers {
-		winner, board := game.callNumber(call)
+		winner, board := game.callNumber(call, true)
 		if winner {
 			winningCall = call
 			winningBoard = board
@@ -168,6 +196,66 @@ func giantSquidPartOne(bingoNums []string) int {
 	}
 
 	return winningCallNum * unmarkedTotal
+}
+
+func giantSquidPartTwo(bingoNums []string) int {
+	allNumbers := bingoNums[0]
+	callNumbers := strings.Split(allNumbers, ",")
+
+	game := bingoGame{
+		boards:        []bingoBoard{},
+		winningBoards: map[int]bool{},
+	}
+
+	board := bingoBoard{}
+	board.init()
+
+	for i := 2; i < len(bingoNums); i++ {
+		if bingoNums[i] == "" {
+			game.addBoard(board)
+			board = bingoBoard{}
+			board.init()
+			continue
+		}
+
+		boardNumbers := strings.Split(bingoNums[i], " ")
+
+		for _, n := range boardNumbers {
+			if n == "" {
+				continue
+			}
+
+			bingoNum := bingoNumber{
+				value:  n,
+				marked: false,
+			}
+			board.addNumber(bingoNum)
+		}
+	}
+	game.addBoard(board)
+
+	latestWinningCall := ""
+	var latestWinner bingoBoard
+	for _, call := range callNumbers {
+		winner, board := game.callNumber(call, false)
+		if winner {
+			latestWinningCall = call
+			latestWinner = board
+
+			remaining := game.getRemainingBoards()
+			if len(remaining) == 0 {
+				break
+			}
+		}
+	}
+
+	unmarkedTotal := latestWinner.sumUnmarked()
+	latestWinningCallNum, err := strconv.Atoi(latestWinningCall)
+	if err != nil {
+		panic("error converting winningCallNum to int")
+	}
+
+	return latestWinningCallNum * unmarkedTotal
 }
 
 func TestDayFour(t *testing.T) {
@@ -234,5 +322,40 @@ func TestDayFour(t *testing.T) {
 		}
 
 		runTests(t, tests, giantSquidPartOne)
+	})
+
+	t.Run("part two", func(t *testing.T) {
+		tests := map[string]testConfig{
+			"test 1": {
+				input: []string{
+					"7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,19,3,26,1",
+					"",
+					"22 13 17 11  0",
+					" 8  2 23  4 24",
+					"21  9 14 16  7",
+					" 6 10  3 18  5",
+					" 1 12 20 15 19",
+					"",
+					" 3 15  0  2 22",
+					" 9 18 13 17  5",
+					"19  8  7 25 23",
+					"20 11 10 24  4",
+					"14 21 16 12  6",
+					"",
+					"14 21 17 24  4",
+					"10 16 15  9 19",
+					"18  8 23 26 20",
+					"22 11 13  6  5",
+					" 2  0 12  3  7",
+				},
+				expected: 1924,
+			},
+			"solution": {
+				input:     input,
+				logResult: true,
+			},
+		}
+
+		runTests(t, tests, giantSquidPartTwo)
 	})
 }
