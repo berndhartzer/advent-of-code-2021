@@ -133,6 +133,36 @@ func hydrothermalVenturePartOne(vents []string) int {
 	return grid.getNumOverlaps()
 }
 
+func hydrothermalVenturePartTwo(vents []string) int {
+	grid := dynamicGrid{
+		grid:     [][]int{},
+		overlaps: map[string]bool{},
+	}
+
+	for _, vent := range vents {
+		split := strings.Split(vent, " -> ")
+		coords := make([]int, 0, 4)
+
+		for _, s := range split {
+			innerSplit := strings.Split(s, ",")
+			for _, z := range innerSplit {
+				n, err := strconv.Atoi(z)
+				if err != nil {
+					panic("unable to convert coord to int")
+				}
+				coords = append(coords, n)
+			}
+		}
+
+		x1, y1 := coords[0], coords[1]
+		x2, y2 := coords[2], coords[3]
+
+		grid.markPoints(x1, y1, x2, y2)
+	}
+
+	return grid.getNumOverlaps()
+}
+
 func abs(n int) int {
 	if n < 0 {
 		return -n
@@ -195,5 +225,31 @@ func TestDayFive(t *testing.T) {
 		}
 
 		runTests(t, tests, hydrothermalVenturePartOne)
+	})
+
+	t.Run("part two", func(t *testing.T) {
+		tests := map[string]testConfig{
+			"test 1": {
+				input: []string{
+					"0,9 -> 5,9",
+					"8,0 -> 0,8",
+					"9,4 -> 3,4",
+					"2,2 -> 2,1",
+					"7,0 -> 7,4",
+					"6,4 -> 2,0",
+					"0,9 -> 2,9",
+					"3,4 -> 1,4",
+					"0,0 -> 8,8",
+					"5,5 -> 8,2",
+				},
+				expected: 12,
+			},
+			"solution": {
+				input:     input,
+				logResult: true,
+			},
+		}
+
+		runTests(t, tests, hydrothermalVenturePartTwo)
 	})
 }
