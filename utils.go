@@ -55,3 +55,23 @@ func readFileAsString(name string) (string, error) {
 
 	return s, nil
 }
+
+func readFileAsCommaSeparatedInts(name string) ([]int, error) {
+	stringVal, err := readFileAsString(name)
+	if err != nil {
+		return nil, nil
+	}
+	split := strings.Split(stringVal, ",")
+
+	intVals := []int{}
+	for _, s := range split {
+		n, err := strconv.Atoi(s)
+		if err != nil {
+			return nil, nil
+		}
+
+		intVals = append(intVals, n)
+	}
+
+	return intVals, nil
+}
