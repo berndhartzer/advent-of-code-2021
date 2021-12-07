@@ -163,13 +163,6 @@ func hydrothermalVenturePartTwo(vents []string) int {
 	return grid.getNumOverlaps()
 }
 
-func abs(n int) int {
-	if n < 0 {
-		return -n
-	}
-	return n
-}
-
 func TestDayFive(t *testing.T) {
 	type testConfig struct {
 		input     []string

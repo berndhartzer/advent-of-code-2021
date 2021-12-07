@@ -75,3 +75,10 @@ func readFileAsCommaSeparatedInts(name string) ([]int, error) {
 
 	return intVals, nil
 }
+
+func abs(n int) int {
+	if n < 0 {
+		return -n
+	}
+	return n
+}
