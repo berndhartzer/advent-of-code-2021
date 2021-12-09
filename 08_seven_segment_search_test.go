@@ -29,8 +29,102 @@ func sevenSegmentSearchPartOne(signals []string) int {
 	return unique
 }
 
+type digit struct {
+	topMiddle    string
+	topLeft      string
+	topRight     string
+	middle       string
+	bottomLeft   string
+	bottomRight  string
+	bottomMiddle string
+}
+
 func sevenSegmentSearchPartTwo(signals []string) int {
+	for _, signal := range signals {
+		split := strings.Split(signal, " ")
+
+		inputs := split[:10]
+		// outputs := split[len(split)-4:]
+
+		// fmt.Println(inputs)
+		// fmt.Println(outputs)
+
+		digits := map[int]string{}
+
+
+		d := digit{}
+
+		/*
+  0:      1:      2:      3:      4:
+ aaaa    ....    aaaa    aaaa    ....
+b    c  .    c  .    c  .    c  b    c
+b    c  .    c  .    c  .    c  b    c
+ ....    ....    dddd    dddd    dddd
+e    f  .    f  e    .  .    f  .    f
+e    f  .    f  e    .  .    f  .    f
+ gggg    ....    gggg    gggg    ....
+
+  5:      6:      7:      8:      9:
+ aaaa    aaaa    aaaa    aaaa    aaaa
+b    .  b    .  .    c  b    c  b    c
+b    .  b    .  .    c  b    c  b    c
+ dddd    dddd    ....    dddd    dddd
+.    f  e    f  .    f  e    f  .    f
+.    f  e    f  .    f  e    f  .    f
+ gggg    gggg    ....    gggg    gggg
+		*/
+
+		for _, input := range inputs {
+			switch len(input) {
+			case 2:
+				digits[1] = input
+			case 4:
+				digits[4] = input
+			case 3:
+				digits[7] = input
+			case 7:
+				digits[8] = input
+			}
+		}
+
+		d.topMiddle = getUniqueChars(digits[1], digits[7])
+		// fmt.Println(digits[1], digits[7], uniqueChars)
+
+		fmt.Printf("%+v\n", d)
+
+	}
+
 	return 0
+}
+
+func getUniqueChars(a, b string) string {
+	unique := map[rune]int{}
+
+	for _, char := range a {
+		_, ok := unique[char]
+		if ok {
+			unique[char]++
+		} else {
+			unique[char] = 1
+		}
+	}
+	for _, char := range b {
+		_, ok := unique[char]
+		if ok {
+			unique[char]++
+		} else {
+			unique[char] = 1
+		}
+	}
+
+	result := ""
+	for char, c := range unique {
+		if c == 1 {
+			result += string(char)
+		}
+	}
+
+	return result
 }
 
 func TestDayEight(t *testing.T) {
