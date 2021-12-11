@@ -2,6 +2,7 @@ package aoc
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -81,4 +82,8 @@ func abs(n int) int {
 		return -n
 	}
 	return n
+}
+
+func printStruct(s interface{}) {
+	fmt.Printf("%+v\n", s)
 }
