@@ -39,40 +39,63 @@ type digit struct {
 	bottomMiddle string
 }
 
+func (d digit) getChars() string {
+	res := ""
+	res += d.topMiddle
+	res += d.topLeft
+	res += d.topRight
+	res += d.middle
+	res += d.bottomLeft
+	res += d.bottomRight
+	res += d.bottomMiddle
+	return res
+}
+
+func (d digit) asInt(s string) int {
+	switch len(s) {
+	case 2:
+		return 1
+	case 4:
+		return 4
+	case 3:
+		return 7
+	case 7:
+		return 8
+	case 5:
+		if strings.Contains(s, d.topLeft) {
+			return 5
+		}
+		if strings.Contains(s, d.bottomLeft) {
+			return 2
+		}
+		return 3
+	case 6:
+		if !strings.Contains(s, d.middle) {
+			return 0
+		}
+		if strings.Contains(s, d.bottomLeft) {
+			return 6
+		}
+		return 9
+	}
+
+	panic("we shouldnt be here")
+}
+
+// pretty ugly solution, but it works, and ive got cricket to watch
 func sevenSegmentSearchPartTwo(signals []string) int {
+	total := 0
+
 	for _, signal := range signals {
 		split := strings.Split(signal, " ")
-
 		inputs := split[:10]
-		// outputs := split[len(split)-4:]
-
-		// fmt.Println(inputs)
-		// fmt.Println(outputs)
+		outputs := split[len(split)-4:]
 
 		digits := map[int]string{}
 
-
 		d := digit{}
-
-		/*
-  0:      1:      2:      3:      4:
- aaaa    ....    aaaa    aaaa    ....
-b    c  .    c  .    c  .    c  b    c
-b    c  .    c  .    c  .    c  b    c
- ....    ....    dddd    dddd    dddd
-e    f  .    f  e    .  .    f  .    f
-e    f  .    f  e    .  .    f  .    f
- gggg    ....    gggg    gggg    ....
-
-  5:      6:      7:      8:      9:
- aaaa    aaaa    aaaa    aaaa    aaaa
-b    .  b    .  .    c  b    c  b    c
-b    .  b    .  .    c  b    c  b    c
- dddd    dddd    ....    dddd    dddd
-.    f  e    f  .    f  e    f  .    f
-.    f  e    f  .    f  e    f  .    f
- gggg    gggg    ....    gggg    gggg
-		*/
+		lenFives := []string{}
+		lenSixes := []string{}
 
 		for _, input := range inputs {
 			switch len(input) {
@@ -84,47 +107,99 @@ b    .  b    .  .    c  b    c  b    c
 				digits[7] = input
 			case 7:
 				digits[8] = input
+			case 5:
+				lenFives = append(lenFives, input)
+			case 6:
+				lenSixes = append(lenSixes, input)
+
 			}
 		}
 
 		d.topMiddle = getUniqueChars(digits[1], digits[7])
-		// fmt.Println(digits[1], digits[7], uniqueChars)
 
-		fmt.Printf("%+v\n", d)
+		middleAndTopLeft := getUniqueChars(digits[1], digits[4])
+		for _, s := range lenSixes {
+			matching := getMatchingChars(s, middleAndTopLeft)
+			if len(matching) == 1 {
+				d.topLeft = matching[0]
+				digits[0] = s
+				break
+			}
+		}
+		d.middle = getUniqueChars(d.topLeft, middleAndTopLeft)
 
+		bottomMiddleAndRight := ""
+		for _, s := range lenFives {
+			currentKnown := d.getChars()
+			matching := getMatchingChars(s, currentKnown)
+			if len(matching) == 3 {
+				bottomMiddleAndRight = getUniqueChars(s, currentKnown)
+				digits[5] = s
+			}
+		}
+
+		d.bottomRight = getMatchingChars(bottomMiddleAndRight, digits[1])[0]
+		d.topRight = getUniqueChars(digits[1], d.bottomRight)
+		d.bottomMiddle = getUniqueChars(bottomMiddleAndRight, d.bottomRight)
+		d.bottomLeft = getUniqueChars(d.getChars(), "abcdefg")
+
+		x := 1000
+		for _, output := range outputs {
+			asInt := d.asInt(output)
+			total += x * asInt
+
+			x /= 10
+		}
 	}
 
-	return 0
+	return total
+}
+
+func getMatchingChars(a, b string) []string {
+	charMap := getCharMap(a, b)
+	result := []string{}
+	for char, c := range charMap {
+		if c > 1 {
+			result = append(result, string(char))
+		}
+	}
+
+	return result
 }
 
 func getUniqueChars(a, b string) string {
-	unique := map[rune]int{}
-
-	for _, char := range a {
-		_, ok := unique[char]
-		if ok {
-			unique[char]++
-		} else {
-			unique[char] = 1
-		}
-	}
-	for _, char := range b {
-		_, ok := unique[char]
-		if ok {
-			unique[char]++
-		} else {
-			unique[char] = 1
-		}
-	}
-
+	charMap := getCharMap(a, b)
 	result := ""
-	for char, c := range unique {
+	for char, c := range charMap {
 		if c == 1 {
 			result += string(char)
 		}
 	}
 
 	return result
+}
+
+func getCharMap(a, b string) map[rune]int {
+	chars := map[rune]int{}
+
+	for _, char := range a {
+		_, ok := chars[char]
+		if ok {
+			chars[char]++
+		} else {
+			chars[char] = 1
+		}
+	}
+	for _, char := range b {
+		_, ok := chars[char]
+		if ok {
+			chars[char]++
+		} else {
+			chars[char] = 1
+		}
+	}
+
+	return chars
 }
 
 func TestDayEight(t *testing.T) {
