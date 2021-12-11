@@ -123,6 +123,30 @@ func dumboOctopusPartOne(lines []string) int {
 	return total
 }
 
+func dumboOctopusPartTwo(lines []string) int {
+	grid := octoGrid{
+		values: make([]*octoPoint, 100),
+		width:  10,
+		height: 10,
+	}
+
+	for y, row := range lines {
+		for x, char := range row {
+			grid.setValue(x, y, char)
+		}
+	}
+
+	i := 1
+	for ; ; i++ {
+		flashes := grid.step(i)
+		if flashes == 100 {
+			break
+		}
+	}
+
+	return i
+}
+
 func TestDayEleven(t *testing.T) {
 	type testConfig struct {
 		input     []string
@@ -178,5 +202,31 @@ func TestDayEleven(t *testing.T) {
 		}
 
 		runTests(t, tests, dumboOctopusPartOne)
+	})
+
+	t.Run("part two", func(t *testing.T) {
+		tests := map[string]testConfig{
+			"test 1": {
+				input: []string{
+					"5483143223",
+					"2745854711",
+					"5264556173",
+					"6141336146",
+					"6357385478",
+					"4167524645",
+					"2176841721",
+					"6882881134",
+					"4846848554",
+					"5283751526",
+				},
+				expected: 195,
+			},
+			"solution": {
+				input:     input,
+				logResult: true,
+			},
+		}
+
+		runTests(t, tests, dumboOctopusPartTwo)
 	})
 }
