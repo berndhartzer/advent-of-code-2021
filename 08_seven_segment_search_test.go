@@ -29,8 +29,177 @@ func sevenSegmentSearchPartOne(signals []string) int {
 	return unique
 }
 
+type digit struct {
+	topMiddle    string
+	topLeft      string
+	topRight     string
+	middle       string
+	bottomLeft   string
+	bottomRight  string
+	bottomMiddle string
+}
+
+func (d digit) getChars() string {
+	res := ""
+	res += d.topMiddle
+	res += d.topLeft
+	res += d.topRight
+	res += d.middle
+	res += d.bottomLeft
+	res += d.bottomRight
+	res += d.bottomMiddle
+	return res
+}
+
+func (d digit) asInt(s string) int {
+	switch len(s) {
+	case 2:
+		return 1
+	case 4:
+		return 4
+	case 3:
+		return 7
+	case 7:
+		return 8
+	case 5:
+		if strings.Contains(s, d.topLeft) {
+			return 5
+		}
+		if strings.Contains(s, d.bottomLeft) {
+			return 2
+		}
+		return 3
+	case 6:
+		if !strings.Contains(s, d.middle) {
+			return 0
+		}
+		if strings.Contains(s, d.bottomLeft) {
+			return 6
+		}
+		return 9
+	}
+
+	panic("we shouldnt be here")
+}
+
+// pretty ugly solution, but it works, and ive got cricket to watch
 func sevenSegmentSearchPartTwo(signals []string) int {
-	return 0
+	total := 0
+
+	for _, signal := range signals {
+		split := strings.Split(signal, " ")
+		inputs := split[:10]
+		outputs := split[len(split)-4:]
+
+		digits := map[int]string{}
+
+		d := digit{}
+		lenFives := []string{}
+		lenSixes := []string{}
+
+		for _, input := range inputs {
+			switch len(input) {
+			case 2:
+				digits[1] = input
+			case 4:
+				digits[4] = input
+			case 3:
+				digits[7] = input
+			case 7:
+				digits[8] = input
+			case 5:
+				lenFives = append(lenFives, input)
+			case 6:
+				lenSixes = append(lenSixes, input)
+
+			}
+		}
+
+		d.topMiddle = getUniqueChars(digits[1], digits[7])
+
+		middleAndTopLeft := getUniqueChars(digits[1], digits[4])
+		for _, s := range lenSixes {
+			matching := getMatchingChars(s, middleAndTopLeft)
+			if len(matching) == 1 {
+				d.topLeft = matching[0]
+				digits[0] = s
+				break
+			}
+		}
+		d.middle = getUniqueChars(d.topLeft, middleAndTopLeft)
+
+		bottomMiddleAndRight := ""
+		for _, s := range lenFives {
+			currentKnown := d.getChars()
+			matching := getMatchingChars(s, currentKnown)
+			if len(matching) == 3 {
+				bottomMiddleAndRight = getUniqueChars(s, currentKnown)
+				digits[5] = s
+			}
+		}
+
+		d.bottomRight = getMatchingChars(bottomMiddleAndRight, digits[1])[0]
+		d.topRight = getUniqueChars(digits[1], d.bottomRight)
+		d.bottomMiddle = getUniqueChars(bottomMiddleAndRight, d.bottomRight)
+		d.bottomLeft = getUniqueChars(d.getChars(), "abcdefg")
+
+		x := 1000
+		for _, output := range outputs {
+			asInt := d.asInt(output)
+			total += x * asInt
+
+			x /= 10
+		}
+	}
+
+	return total
+}
+
+func getMatchingChars(a, b string) []string {
+	charMap := getCharMap(a, b)
+	result := []string{}
+	for char, c := range charMap {
+		if c > 1 {
+			result = append(result, string(char))
+		}
+	}
+
+	return result
+}
+
+func getUniqueChars(a, b string) string {
+	charMap := getCharMap(a, b)
+	result := ""
+	for char, c := range charMap {
+		if c == 1 {
+			result += string(char)
+		}
+	}
+
+	return result
+}
+
+func getCharMap(a, b string) map[rune]int {
+	chars := map[rune]int{}
+
+	for _, char := range a {
+		_, ok := chars[char]
+		if ok {
+			chars[char]++
+		} else {
+			chars[char] = 1
+		}
+	}
+	for _, char := range b {
+		_, ok := chars[char]
+		if ok {
+			chars[char]++
+		} else {
+			chars[char] = 1
+		}
+	}
+
+	return chars
 }
 
 func TestDayEight(t *testing.T) {
