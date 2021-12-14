@@ -8,6 +8,14 @@ import (
 )
 
 func extendedPolymerizationPartOne(input []string) int {
+	return extendedPolymerization(input, 10)
+}
+
+func extendedPolymerizationPartTwo(input []string) int {
+	return extendedPolymerization(input, 40)
+}
+
+func extendedPolymerization(input []string, steps int) int {
 	pairs := map[[2]byte]int{}
 	chars := map[byte]int{}
 	start := input[0]
@@ -24,7 +32,6 @@ func extendedPolymerizationPartOne(input []string) int {
 		rules[[2]byte{byte(split[0][0]), byte(split[0][1])}] = byte(split[1][0])
 	}
 
-	steps := 10
 	for i := 0; i < steps; i++ {
 		delta := map[[2]byte]int{}
 
@@ -121,5 +128,16 @@ func TestDayFourteen(t *testing.T) {
 		}
 
 		runTests(t, tests, extendedPolymerizationPartOne)
+	})
+
+	t.Run("part two", func(t *testing.T) {
+		tests := map[string]testConfig{
+			"solution": {
+				input:     input,
+				logResult: true,
+			},
+		}
+
+		runTests(t, tests, extendedPolymerizationPartTwo)
 	})
 }
